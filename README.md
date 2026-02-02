@@ -20,6 +20,7 @@ bundle for vendor submissions.
   - Payload file
   - Signature file
   - Public key
+- Included a hidden watermark in the output zip folder for traceability.
 
 ---
 
