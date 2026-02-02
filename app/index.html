@@ -1,0 +1,1409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Metadata Form</title>
+
+<!-- JSZip (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+  :root{
+    --bg:#f5f7fa; --card:#ffffff; --border:#dfe6ee;
+    --label:#0b1220; --muted:#6b7280;
+    --accent:#4f46e5; --accent-2:#06b6d4;
+    --req:#dc2626; --radius:14px;
+    --shadow:0 8px 24px rgba(15,23,42,0.06);
+  }
+  *{ box-sizing:border-box }
+  body{
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background: linear-gradient(180deg,var(--bg),#eef3fb);
+  margin: 0;
+  padding: 0;
+  color: var(--label);
+  }
+  .error-msg{
+  color:#dc2626;
+  font-size:13px;
+  margin:4px 0 0 0;
+  display:none;
+}
+  .container{ width:880px; max-width:95%;  margin: 36px auto;   /* centers the form */ }
+
+  .note{ font-size:13px; color:var(--muted); margin-bottom:16px }
+
+  .card{
+    background:var(--card); border-radius:var(--radius);
+    padding:26px; border:1px solid var(--border);
+    box-shadow:var(--shadow); margin-bottom:32px;
+  }
+
+  .row{
+    display:flex; align-items:center;
+    gap:12px; margin:10px 0;
+  }
+  .row label{
+    width:300px; font-weight:700; font-size:14px;
+  }
+
+  .row input[type=text],
+  .row input[type=url],
+  .row select{
+    flex:1; padding:10px 12px;
+    border-radius:8px; border:1px solid var(--border);
+    font-size:14px; width:100% !important;
+    max-width:100% !important;
+  }
+
+.section-title{
+    font-weight:800; margin:38px 0 14px;
+    font-size:18px; letter-spacing:0.3px; color:var(--label);
+  }
+
+  .array-block{ display:flex; flex-direction:column; gap:8px }
+  .array-item{ display:flex; gap:8px; align-items:center }
+  .array-item input{
+    padding:9px 10px; border-radius:8px;
+    border:1px solid var(--border); font-size:14px;
+  }
+
+  .btn{ padding:8px 10px; border-radius:8px; border:0;
+        cursor:pointer; font-weight:700 }
+  .add{ background:linear-gradient(90deg,#10b981,#06b6d4); color:white }
+  .remove{ background:#ef4444; color:white }
+
+  #saveBtn{
+    margin-top:12px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    color:white; padding:12px 18px;
+    border-radius:10px; border:0;
+    cursor:pointer; font-weight:800;
+  }
+
+  #simpleError{
+    color:var(--req); font-weight:800;
+    margin-top:10px; display:none;
+  }
+#sigError{
+    color:var(--req); font-weight:800;
+    margin-top:10px; display:none;
+  }
+#hashError{
+    color:var(--req); font-weight:800;
+    margin-top:10px; display:none;
+  }
+
+
+  /* Upload area styles (Option A) */
+  .upload-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .upload-btn-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  .upload-btn {
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    color: white;
+    font-weight: 700;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .upload-btn-wrapper input[type=file] {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .upload-filename {
+    font-size: 13px;
+    color: var(--muted);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width:640px){
+    .row{ flex-direction:column; align-items:flex-start }
+    .row label{ width:100%; margin-bottom:6px }
+    .upload-box{ flex-direction:column; align-items:flex-start; gap:8px }
+    .upload-filename{ max-width:100% }
+  }
+.app-header {
+  width: 100%;
+  height: 60px;        
+  position: fixed;
+  top:0px;
+  left: 2px;
+  right: 2px;
+  bottom:20px;
+  z-index: 1000;         /* enterprise header height */
+  background-color: #0076CE;    /* Dell Blue */
+
+  border-radius: 18px;
+
+  /* 3D elevation */
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    0 6px 18px rgba(0, 0, 0, 0.18);
+
+  /* Smooth rendering */
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;     /* center logo horizontally */
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Logo */
+.header-logo {
+  padding-top: 25px;
+  height: 300px;                 /* correct Dell logo size */
+  width: 550px;
+  display: block;
+}
+
+
+
+
+</style>
+</head>
+
+<body>
+  <!-- ======================= HEADER BANNER ======================= -->
+<div class="app-header">
+  <img
+    src="dell-logo1.png"
+    alt="Dell Technologies"
+    class="header-logo"
+  />
+</div>
+
+
+<div class="container">
+
+<h1 style="text-align:center;font-weight:900;font-size:22px;margin-bottom:13px;padding-top:45px;color:var(--label);letter-spacing:0.5px">
+  Dell Firmware Update Artifact Packaging
+</h1>
+
+<p class="note">
+  Required fields are marked with <span style="color:var(--req)">*</span>.
+</p>
+
+<!-- ======================= MAIN CARD ======================= -->
+<div class="card">
+<!-- ======================= PREFILL JSON ======================= -->
+<!-- ======================= PREFILL JSON ======================= -->
+<div class="row">
+  <label>Upload a relevant JSON to prefill fields</label>
+  <div style="flex:1;">
+    <div class="upload-box">
+      <div class="upload-btn-wrapper" style="margin-top:14px">
+        <button class="upload-btn" type="button">Choose File</button>
+        <input id="PrefillJSONUpload" type="file" accept=".json">
+      </div>
+      <span id="PrefillJSONFileName" class="upload-filename" style="margin-top:8px">No file selected</span>
+    </div>
+
+    <!-- Allowed file types hint -->
+    <div style="color:var(--req);font-size:13px;margin-top:4px">
+      Allowed: .json
+    </div>
+
+    <div id="PrefillJSONErr" class="error-msg" 
+         style="color:var(--req);font-size:13px;margin-top:4px;display:none">
+    </div>
+  </div>
+</div>
+
+  <!-- Schema Version -->
+  <div class="row">
+    <label>Schema Version <span style="color:var(--req)">*</span></label>
+    <div style="flex:1">
+      <input id="SchemaVersion" type="text">
+      <div id="SchemaVersionErr" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- Updateable Component Type -->
+  <div class="row">
+    <label>Updateable Component Type <span style="color:var(--req)">*</span></label>
+    <select id="UpdateableComponentType">
+      <option value="">-- select --</option>
+      <option value="Firmware">Firmware</option>
+      <option value="Driver">Driver</option>
+      <option value="BIOS">BIOS</option>
+      <option value="Application">Application</option>
+    </select>
+  </div>
+
+  <!-- Manufacturer -->
+  <div class="row">
+    <label>Manufacturer <span style="color:var(--req)">*</span></label>
+    <select id="Manufacturer">
+      <option value="">-- select --</option>
+      <option value="Dell">Dell</option>
+      <option value="Delta">Delta</option>
+      <option value="Liteon">Liteon</option>
+      <option value="MotivAir">MotivAir</option>
+    </select>
+  </div>
+
+  <!-- Equipment Type -->
+  <div class="row">
+    <label>Equipment Type <span style="color:var(--req)">*</span></label>
+    <select id="EquipmentType">
+      <option value="">-- select --</option>
+      <option value="Power Equipment">Power Equipment</option>
+      <option value="Cooling Distribution Unit">Cooling Distribution Unit</option>
+      <option value="Rack Controller">Rack Controller</option>
+    </select>
+  </div>
+
+  <!-- Equipment Software Identifiers -->
+  <div class="row" style="align-items:flex-start">
+    <label>Equipment Software Identifiers <span style="color:var(--req)">*</span></label>
+    <div style="flex:1">
+      <div id="ESI" class="array-block"></div>
+
+      <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+        <button class="btn add" type="button" onclick="addESI()">+ Add Identifier</button>
+        <span style="font-size:12px; color:var(--muted);">Each entry (IDType and IDValue)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Updateable Component Name -->
+  <div class="row">
+    <label>Updateable Component Name</label>
+    <input id="UpdateableComponentName" type="text">
+  </div>
+
+  <!-- Update Software Version -->
+  <div class="row">
+    <label>Update Software Version <span style="color:var(--req)">*</span></label>
+    <div style="flex:1">
+      <input id="UpdateSoftwareVersion" type="text">
+      <div id="UpdateSoftwareVersionErr" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- Criticality -->
+  <div class="row">
+    <label>Update Software Criticality</label>
+    <select id="UpdateSoftwareCriticality">
+      <option value="Urgent">Urgent</option>
+      <option value="Recommended">Recommended</option>
+      <option value="Optional">Optional</option>
+      <option value="Security">Security</option>
+      <option value="Performance">Performance</option>
+    </select>
+  </div>
+</div>
+
+<!-- ======================= ENCLOSURE DETAILS ======================= -->
+<div class="section-title">Enclosure Details</div>
+<div class="card">
+
+  <div class="row">
+    <label>Part of Enclosure <span style="color:var(--req)">*</span></label>
+    <select id="PartOfEnclosure" onchange="toggleEnclosure()">
+      <option value="false">false</option>
+      <option value="true">true</option>
+    </select>
+  </div>
+
+  <div id="EnclosureBlock" style="display:none;margin-top:6px">
+
+    <div class="row">
+      <label>Enclosure Equipment Type <span style="color:var(--req)">*</span></label>
+      <input id="EnclosureEquipmentType" type="text">
+    </div>
+
+    <div class="row" style="align-items:flex-start">
+      <label>Enclosure Equipment Identifiers <span style="color:var(--req)">*</span></label>
+      <div style="flex:1">
+        <div id="EEI" class="array-block"></div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+          <button class="btn add" type="button" onclick="addEEI()">+ Add Identifier</button>
+          <span style="font-size:12px; color:var(--muted);">Each entry (IDType and IDValue)</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================= PACKAGE INFO ======================= -->
+<div class="section-title">Package Info</div>
+<div class="card">
+
+  <div class="row">
+    <label>Base Location</label>
+    <div style="flex:1">
+      <input id="BaseLocation" type="url">
+      <div id="BaseLocationErr" class="error-msg"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>File Path</label>
+    <div style="flex:1">
+      <input id="FilePath" type="text">
+      <div id="FilePathErr" class="error-msg"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>Embedded Signature</label>
+    <select id="EmbeddedSignature">
+      <option value="false">false</option>
+      <option value="true">true</option>
+    </select>
+  </div>
+
+ <div class="row">
+  <label>Sign Verification Method <span style="color:var(--req)">*</span></label>
+
+  <div style="flex:1; display:flex; gap:10px;">
+    <!-- Sign Algorithm -->
+    <select id="SignAlgorithm">
+      <option value="">-- Sign Algorithm --</option>
+      <option value="RSA2048">RSA2048</option>
+      <option value="RSA3072">RSA3072</option>
+      <option value="RSA4096">RSA4096</option>
+      <option value="PRIME256V1">PRIME256V1</option>
+      <option value="SECP384R1">SECP384R1</option>
+      <option value="SECP521R1">SECP521R1</option>
+      <option value="ED25519">ED25519</option>
+      <option value="ED448">ED448</option>
+    </select>
+
+    <!-- Hash Algorithm -->
+    <select id="HashAlgorithm">
+      <option value="">-- Hash Algorithm --</option>
+      <option value="SHA256">SHA256</option>
+      <option value="SHA384">SHA384</option>
+      <option value="SHA512">SHA512</option>
+    </select>
+  </div>
+</div>
+
+<div id="SignMethodErr" class="error-msg" style="display:none;">
+  Please select a valid Sign Algorithm and Hash Algorithm
+</div>
+
+
+
+  <!-- Payload Upload (in-line with other fields) -->
+  <!-- Upload Payload File -->
+<div class="row">
+  <label>Upload Payload File <span style="color:var(--req)">*</span></label>
+  <div style="flex:1;">
+    <div class="upload-box">
+      <div class="upload-btn-wrapper">
+        <button class="upload-btn" type="button">Choose File</button>
+        <input id="PayloadUpload" type="file">
+      </div>
+      <span id="PayloadFileName" class="upload-filename">No file selected</span>
+    </div>
+    <div style="color:var(--req);font-size:13px;margin-top:4px">
+      Allowed: .tar, .bin, .fwpkg, .cec, .hex
+    </div>
+    <div id="PayloadErr" class="error-msg"></div>
+  </div>
+</div>
+<!-- Upload Sign File -->
+<div class="row">
+  <label>Upload Sign File <span style="color:var(--req)">*</span></label>
+  <div style="flex:1;">
+    <div class="upload-box">
+      <div class="upload-btn-wrapper">
+        <button class="upload-btn" type="button">Choose File</button>
+        <input id="SignUpload" type="file">
+      </div>
+      <span id="SignFileName" class="upload-filename">No file selected</span>
+    </div>
+    <div style="color:var(--req);font-size:13px;margin-top:4px">
+      Allowed: .sig, .sign
+    </div>
+    <div id="SignUploadErr" class="error-msg"></div>
+  </div>
+</div>
+
+<!-- Upload Public Key -->
+<div class="row">
+  <label>Upload Public Key <span style="color:var(--req)">*</span></label>
+  <div style="flex:1;">
+    <div class="upload-box">
+      <div class="upload-btn-wrapper">
+        <button class="upload-btn" type="button">Choose File</button>
+        <input id="PublicKeyUpload" type="file">
+      </div>
+      <span id="PublicKeyFileName" class="upload-filename">No file selected</span>
+    </div>
+    <div style="color:var(--req);font-size:13px;margin-top:4px">
+      Allowed: .pub, .pem, .key
+    </div>
+    <div id="PublicKeyUploadErr" class="error-msg"></div>
+  </div>
+</div>
+
+
+</div>
+
+<!-- ======================= SVA ======================= -->
+<div class="section-title">Sign Verification Attributes</div>
+<div class="card">
+  <div class="row">
+    <label>Include Sign Verification Attributes?</label>
+    <select id="UseSVA" onchange="toggleSVA()">
+      <option value="no">no</option>
+      <option value="yes">yes</option>
+    </select>
+  </div>
+
+  <div id="SVA_Block" style="display:none;margin-top:6px">
+
+    <div class="row">
+      <label>Sign File Location <span style="color:var(--req)">*</span></label>
+      <div style="flex:1">
+        <input id="SignFileLocation" type="url">
+        <div id="SignFileLocationErr" class="error-msg"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Public Key File Location <span style="color:var(--req)">*</span></label>
+      <div style="flex:1">
+        <input id="PublicKeyFileLocation" type="url">
+        <div id="PublicKeyFileLocationErr" class="error-msg"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Digital Certificate</label>
+      <input id="DigitalCertificate" type="text">
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================= FILE DIGESTS ======================= -->
+<div class="section-title">File Digests <span style="color:var(--req)">*</span></div>
+<div class="card">
+
+  <div id="FileDigests" class="array-block"></div>
+
+  <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+    <button class="btn add" type="button" onclick="addDigest()">+ Add Digest</button>
+    <span style="font-size:12px; color:var(--muted);">
+      Each entry (HashAlgorithm and HashValue)
+    </span>
+  </div>
+
+</div>
+
+<!-- ======================= PACKAGE DEPENDENCY ======================= -->
+<div class="section-title">Package Dependency</div>
+<div class="card">
+  <div class="row">
+    <label>Minimum Installed Version <span style="color:var(--req)">*</span></label>
+    <div style="flex:1">
+      <input id="MinimumInstalledVersion" type="text">
+      <div id="MinimumInstalledVersionErr" class="error-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= ACTIVATION REQS ======================= -->
+<div class="section-title">Update Activation Requirements</div>
+<div class="card">
+
+  <div class="row">
+    <label>Controller Reboot <span style="color:var(--req)">*</span></label>
+    <select id="ControllerReboot">
+      <option value="false">false</option>
+      <option value="true">true</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label>Enclosure Reboot <span style="color:var(--req)">*</span></label>
+    <select id="EnclosureReboot">
+      <option value="false">false</option>
+      <option value="true">true</option>
+    </select>
+  </div>
+
+</div>
+
+<div id="sigError">
+  Signature verification failed.
+</div>
+
+<div id="hashError">
+  File integrity check failed.
+</div>
+
+
+<div id="simpleError">Please enter all the fields marked with *</div>
+
+<button id="saveBtn" onclick="saveJSON()">Save JSON</button>
+
+</div> <!-- container end -->
+<script src="../renderer.js"></script>
+<script>
+/* ---------- Prefill defaults ---------- */
+(function () {
+  document.getElementById("UpdateableComponentType").value = "Firmware";
+  document.getElementById("UpdateSoftwareCriticality").value = "Urgent";
+  document.getElementById("MinimumInstalledVersion").value = "Not Applicable";
+})();
+(function () {
+  const signAlgo = document.getElementById("SignAlgorithm");
+  const hashAlgo = document.getElementById("HashAlgorithm");
+
+  signAlgo.addEventListener("change", () => {
+    const val = signAlgo.value;
+
+    if (val === "ED25519" || val === "ED448") {
+      hashAlgo.value = "";
+      hashAlgo.disabled = true;
+    } else {
+      hashAlgo.disabled = false;
+    }
+  });
+})();
+
+
+/* ---------- Prefill JSON Upload ---------- */
+(function () {
+  const input = document.getElementById("PrefillJSONUpload");
+  const nameLabel = document.getElementById("PrefillJSONFileName");
+  const err = document.getElementById("PrefillJSONErr");
+  const btn = input.previousElementSibling;
+
+  btn.onclick = () => input.click();
+
+  input.addEventListener("change", () => {
+    err.style.display = "none";
+    nameLabel.textContent = "No file selected";
+
+    if (!input.files.length) return;
+
+    const file = input.files[0];
+    const fname = file.name.toLowerCase();
+
+    if (!fname.endsWith(".json")) {
+      err.textContent = "Only .json files are allowed";
+      err.style.display = "block";
+      input.value = "";
+      return;
+    }
+
+    nameLabel.textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const json = JSON.parse(reader.result);
+        prefillFromJSON(json);
+      } catch (e) {
+        err.textContent = "Invalid JSON file";
+        err.style.display = "block";
+      }
+    };
+    reader.readAsText(file);
+  });
+})();
+
+
+/* ---------- Sign Verification Method validator ---------- */
+
+function  setSelectByText(selectId, value) {
+  if (!value) return;
+
+  const sel = document.getElementById(selectId);
+  const target = value.toString().trim().toLowerCase();
+
+  for (const opt of sel.options) {
+    if (
+      opt.value.toLowerCase() === target ||
+      opt.text.toLowerCase() === target
+    ) {
+      sel.value = opt.value;
+      return;
+    }
+  }
+  // If no match found → do nothing
+}
+
+
+/* ---------- Prefill Form From JSON ---------- */
+function prefillFromJSON(data) {
+  const g = (id) => document.getElementById(id);
+
+// Schema Version: only fill if valid numeric format
+if (data.SchemaVersion) {
+  g("SchemaVersion").value = data.SchemaVersion.trim();
+  g("SchemaVersion").dispatchEvent(new Event("input"));
+}
+
+// Update Software Version: only fill if valid numeric format
+if (data.UpdateSoftwareVersion) {
+  g("UpdateSoftwareVersion").value = data.UpdateSoftwareVersion.trim();
+    g("UpdateSoftwareVersion").dispatchEvent(new Event("input"));
+
+}
+  // ---------- Simple fields ---------
+  // Case-insensitive select matching
+if (data.UpdateableComponentType)
+  setSelectByText("UpdateableComponentType", data.UpdateableComponentType);
+
+if (data.Manufacturer)
+  setSelectByText("Manufacturer", data.Manufacturer);
+
+if (data.EquipmentType)
+  setSelectByText("EquipmentType", data.EquipmentType);
+
+if (data.UpdateSoftwareCriticality)
+  setSelectByText("UpdateSoftwareCriticality", data.UpdateSoftwareCriticality);
+
+  if (data.UpdateableComponentName) g("UpdateableComponentName").value = data.UpdateableComponentName.trim();
+ 
+if (typeof data.PartOfEnclosure === "boolean") {
+  g("PartOfEnclosure").value = String(data.PartOfEnclosure);
+  toggleEnclosure();
+}
+
+  // ---------- Equipment Software Identifiers ----------
+  if (Array.isArray(data.EquipmentSoftwareIdentifiers)) {
+    const esiBlock = document.getElementById("ESI");
+    esiBlock.innerHTML = "";
+    data.EquipmentSoftwareIdentifiers.forEach(item => {
+      const row = createIdentifierRow("idtype", "idvalue");
+      row.querySelector(".idtype").value = item.IdType || "";
+      row.querySelector(".idvalue").value = item.IdValue || "";
+      esiBlock.appendChild(row);
+    });
+  }
+
+  // ---------- Enclosure Details ----------
+  if (data.EnclosureDetails) {
+    if (data.EnclosureDetails.EnclosureEquipmentType){
+      g("PartOfEnclosure").value="true";
+      toggleEnclosure();
+      g("EnclosureEquipmentType").value = data.EnclosureDetails.EnclosureEquipmentType.trim();
+    }
+
+    if (Array.isArray(data.EnclosureDetails.EnclosureEquipmentIdentifiers)) {
+      g("PartOfEnclosure").value= "true";
+      toggleEnclosure();
+      const eeiBlock = document.getElementById("EEI");
+      eeiBlock.innerHTML = "";
+      data.EnclosureDetails.EnclosureEquipmentIdentifiers.forEach(item => {
+        const row = createIdentifierRow("idtype2", "idvalue2");
+        row.querySelector(".idtype2").value = item.IdType || "";
+        row.querySelector(".idvalue2").value = item.IdValue || "";
+        eeiBlock.appendChild(row);
+      });
+    }
+  }
+
+  // ---------- Package Info ----------
+  if (data.PackageInfo) {
+    if (data.PackageInfo.BaseLocation) {
+      g("BaseLocation").value = data.PackageInfo.BaseLocation;
+      g("BaseLocation").dispatchEvent(new Event("input"));
+    }
+    if (data.PackageInfo.FilePath) {
+      g("FilePath").value = data.PackageInfo.FilePath;
+      g("FilePath").dispatchEvent(new Event("input"));
+    }
+    if (typeof data.PackageInfo.EmbeddedSignature === "boolean")
+      g("EmbeddedSignature").value = String(data.PackageInfo.EmbeddedSignature);
+    // ---------- Sign Verification Method (must be SignAlgo-HashAlgo) ----------
+
+// ---------- Sign Verification Method (Dropdown-based) ----------
+if (data.PackageInfo.SignVerificationMethod) {
+  const method = data.PackageInfo.SignVerificationMethod.trim().toUpperCase();
+
+  const signAlgoEl = document.getElementById("SignAlgorithm");
+  const hashAlgoEl = document.getElementById("HashAlgorithm");
+
+  // Reset first
+  signAlgoEl.value = "";
+  hashAlgoEl.value = "";
+  hashAlgoEl.disabled = false;
+
+  // ----- EDDSA -----
+  if (method === "ED25519" || method === "ED448") {
+      signAlgoEl.value = method;
+      hashAlgoEl.disabled = true;
+  }
+  // ----- RSA / ECDSA -----
+  else if (method.includes("-")) {
+    const [signPart, hashPart] = method.split("-");
+
+    const signValid =
+      [...signAlgoEl.options].some(o => o.value === signPart);
+    const hashValid =
+      [...hashAlgoEl.options].some(o => o.value === hashPart);
+
+    if (signValid && hashValid) {
+      signAlgoEl.value = signPart;
+      hashAlgoEl.value = hashPart;
+      hashAlgoEl.disabled = false;
+    }
+  }
+}
+
+
+    // ---------- SVA ----------
+    // ---------- Sign Verification Attributes (SVA) ----------
+
+let hasValidSVA = false;
+
+if (data.PackageInfo && data.PackageInfo.SignVerificationAttributes) {
+  const sva = data.PackageInfo.SignVerificationAttributes;
+
+  const hasSignFile =
+    sva.SignFileLocation && sva.SignFileLocation.toString().trim() !== "";
+
+  const hasPublicKey =
+    sva.PublicKeyFileLocation && sva.PublicKeyFileLocation.toString().trim() !== "";
+    
+    const hasDigCert= sva.DigitalCertificate && sva.DigitalCertificate.toString().trim()!=="";
+
+
+  // Only enable SVA if BOTH required fields are present
+  if (hasSignFile || hasPublicKey || hasDigCert) {
+    hasValidSVA = true;
+
+    document.getElementById("UseSVA").value = "yes";
+    toggleSVA();
+
+    if(sva.SignFileLocation) {
+      g("SignFileLocation").value = sva.SignFileLocation;
+      g("SignFileLocation").dispatchEvent(new Event("input"));
+    }
+    if(sva.PublicKeyFileLocation) {
+      g("PublicKeyFileLocation").value = sva.PublicKeyFileLocation;
+      g("PublicKeyFileLocation").dispatchEvent(new Event("input"));
+    }
+
+    if (sva.DigitalCertificate) {
+      g("DigitalCertificate").value = sva.DigitalCertificate;
+    }
+  }
+}
+
+// If SVA is NOT valid in JSON → force to "no" and clear fields
+if (!hasValidSVA) {
+  document.getElementById("UseSVA").value = "no";
+  toggleSVA();
+}
+
+
+    // ---------- File Digests ----------
+    if (Array.isArray(data.PackageInfo.FileDigests)) {
+      const digBlock = document.getElementById("FileDigests");
+      digBlock.innerHTML = "";
+      data.PackageInfo.FileDigests.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "array-item";
+        const h = document.createElement("input");
+        h.className = "hashAlgo";
+        const v = document.createElement("input");
+        v.className = "hashValue";
+        const btn = document.createElement("button");
+        btn.className = "btn remove";
+        btn.type = "button";
+        btn.textContent = "Remove";
+        btn.onclick = () => row.remove();
+        h.value = item.HashAlgorithm || "";
+        v.value = item.HashValue || "";
+        row.append(h, v, btn);
+        digBlock.appendChild(row);
+      });
+    }
+  }
+
+  // ---------- Package Dependency ----------
+ if (data.PackageDependency?.MinimumInstalledVersion) {
+
+  g("MinimumInstalledVersion").value =
+    data.PackageDependency.MinimumInstalledVersion;
+
+  // Trigger validation so error appears if invalid
+  g("MinimumInstalledVersion").dispatchEvent(new Event("input"));
+}
+
+  // ---------- Activation Requirements ----------
+  if (data.UpdateActivationRequirements) {
+    if (typeof data.UpdateActivationRequirements.ControllerReboot === "boolean")
+      g("ControllerReboot").value = String(data.UpdateActivationRequirements.ControllerReboot);
+    if (typeof data.UpdateActivationRequirements.EnclosureReboot === "boolean")
+      g("EnclosureReboot").value = String(data.UpdateActivationRequirements.EnclosureReboot);
+  }
+  
+
+}
+
+/* ---------- Payload Upload validator + filename display ---------- */
+(function () {
+  const input = document.getElementById("PayloadUpload");
+  const nameLabel = document.getElementById("PayloadFileName");
+  const err = document.getElementById("PayloadErr");
+  const visibleBtn = document.querySelector(".upload-btn-wrapper .upload-btn");
+
+  // allowed extensions
+  const allowedExt = /\.(tar|bin|fwpkg|cec|hex)$/i;
+
+  // forward click to hidden input
+  visibleBtn.addEventListener("click", () => input.click());
+
+  input.addEventListener("change", () => {
+    err.style.display = "none";
+    nameLabel.textContent = "No file selected";
+
+    const files = input.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const fname = file.name || "";
+
+    if (!allowedExt.test(fname)) {
+      err.style.display = "block";
+      input.value = ""; // clear invalid file
+      nameLabel.textContent = "No file selected";
+      return;
+    }
+
+    // valid
+    nameLabel.textContent = fname;
+    err.style.display = "none";
+  });
+})();
+
+/* ---------- Display uploaded filename for legacy PackageUpload if exists (no-op) ---------- */
+(function () {
+  const el = document.getElementById("PackageUpload");
+  if (!el) return;
+  const fileNameLabel = document.getElementById("UploadedFileName");
+  const visibleBtn = document.querySelector('.upload-btn-wrapper .upload-btn');
+  if (visibleBtn) visibleBtn.addEventListener('click', () => el.click());
+  el.addEventListener("change", () => {
+    if (el.files.length > 0) fileNameLabel.textContent = el.files[0].name;
+    else fileNameLabel.textContent = "No file selected";
+  });
+})();
+
+/* ---------- Base Location validator (URL or IP) ---------- */
+(function () {
+  const el = document.getElementById("BaseLocation");
+  const err = document.getElementById("BaseLocationErr");
+
+  function isValidIP(ip) {
+    return /^((25[0-5]|2[0-4]\d|1?\d{1,2})\.){3}(25[0-5]|2[0-4]\d|1?\d{1,2})$/.test(ip);
+  }
+
+  function isValidHTTPURL(url) {
+    try {
+      const u = new URL(url);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
+
+  el.addEventListener("input", () => {
+    const val = el.value.trim();
+    if (val === "") { err.style.display = "none"; return; }
+    const ipOK = isValidIP(val);
+    const urlOK = isValidHTTPURL(val);
+    if (ipOK || urlOK) err.style.display = "none";
+    else {
+      err.style.display = "block";
+      err.textContent = "Enter an IP address or a URL beginning with http:// or https://";
+    }
+  });
+})();
+
+/* ---------- File Path validator ---------- */
+(function () {
+  const el = document.getElementById("FilePath");
+  const err = document.getElementById("FilePathErr");
+  const regex = /^[A-Za-z0-9\/._-]+(\.[A-Za-z0-9]+)$/;
+  el.addEventListener("input", () => {
+    const val = el.value.trim();
+    if (val === "") { err.style.display = "none"; return; }
+    if (!regex.test(val)) {
+      err.style.display = "block";
+      err.textContent = 'Allowed "[a-z],[A-Z],[0-9] / _ - .", end with an Extension';
+    } else err.style.display = "none";
+  });
+})();
+
+/* ---------- Sign File Location validator (.sig) ---------- */
+(function () {
+  const el = document.getElementById("SignFileLocation");
+  const err = document.getElementById("SignFileLocationErr");
+  const sva = document.getElementById("UseSVA");
+  const regex = /^[A-Za-z0-9._\/-]+\.(sign|sig)$/;
+
+  function validate() {
+    const val = el.value.trim();
+    if (sva.value !== "yes") { err.style.display = "none"; return; }
+    if (val === "") { err.style.display = "none"; return; }
+    if (!regex.test(val)) {
+      err.style.display = "block";
+      err.textContent = 'Allowed "[a-z],[A-Z],[0-9] / _ - .", end with .sig/.sign extension';
+    } else err.style.display = "none";
+  }
+
+  el.addEventListener("input", validate);
+  sva.addEventListener("change", validate);
+})();
+
+/* ---------- Public Key File validator (.pub / .pem / .key) ---------- */
+(function () {
+  const el = document.getElementById("PublicKeyFileLocation");
+  const err = document.getElementById("PublicKeyFileLocationErr");
+  const sva = document.getElementById("UseSVA");
+  const regex = /^[A-Za-z0-9._\/-]+\.(pub|pem|key)$/;
+
+  function validate() {
+    const val = el.value.trim();
+    if (sva.value !== "yes") { err.style.display = "none"; return; }
+    if (val === "") { err.style.display = "none"; return; }
+    if (!regex.test(val)) {
+      err.style.display = "block";
+      err.textContent = 'Allowed "[a-z],[A-Z],[0-9] / _ - .", end with .pub/.pem/.key extension';
+    } else err.style.display = "none";
+  }
+
+  el.addEventListener("input", validate);
+  sva.addEventListener("change", validate);
+})();
+
+/* ---------- Version validators ---------- */
+function validateVersion(id, errId) {
+  const el = document.getElementById(id);
+  const err = document.getElementById(errId);
+  el.addEventListener("input", () => {
+    const val = el.value.trim();
+    const ok = val === "" || /^\d+(\.\d+)+$/.test(val);
+    if (!ok) {
+      err.style.display = "block";
+      err.textContent = "Allowed format: Numeric segments (example: 1.0.3)";
+    } else err.style.display = "none";
+  });
+}
+validateVersion("SchemaVersion", "SchemaVersionErr");
+validateVersion("UpdateSoftwareVersion", "UpdateSoftwareVersionErr");
+
+/* ---------- MinimumInstalledVersion ---------- */
+(function () {
+  const el = document.getElementById("MinimumInstalledVersion");
+  const err = document.getElementById("MinimumInstalledVersionErr");
+  el.addEventListener("input", () => {
+    const v = el.value.trim();
+    const ok = v === "Not Applicable" || /^\d+(\.\d+)+$/.test(v);
+    if (!ok) {
+      err.style.display = "block";
+      err.textContent = 'Allowed: "Not Applicable" or Numeric (1.0.1)';
+    } else err.style.display = "none";
+  });
+})();
+
+/* ---------- Add/remove array rows ---------- */
+function createIdentifierRow(c1, c2) {
+  const row = document.createElement("div");
+  row.className = "array-item";
+  const a = document.createElement("input"); a.className = c1;
+  const b = document.createElement("input"); b.className = c2;
+  const btn = document.createElement("button");
+  btn.className = "btn remove"; btn.type = "button"; btn.textContent = "Remove";
+  btn.onclick = () => row.remove();
+  row.append(a, b, btn);
+  return row;
+}
+function addESI() { document.getElementById("ESI").appendChild(createIdentifierRow("idtype", "idvalue")); }
+function addEEI() { document.getElementById("EEI").appendChild(createIdentifierRow("idtype2", "idvalue2")); }
+function addDigest() {
+  const row = document.createElement("div"); row.className = "array-item";
+  const h = document.createElement("input"); h.className = "hashAlgo";
+  const v = document.createElement("input"); v.className = "hashValue";
+  const btn = document.createElement("button"); btn.className = "btn remove";
+  btn.type = "button"; btn.textContent = "Remove"; btn.onclick = () => row.remove();
+  row.append(h, v, btn); document.getElementById("FileDigests").appendChild(row);
+}
+addESI(); addDigest();
+
+/* ---------- Show/hide blocks ---------- */
+ function toggleEnclosure() {
+  const show = document.getElementById("PartOfEnclosure").value === "true";
+  const block = document.getElementById("EnclosureBlock");
+
+  block.style.display = show ? "block" : "none";
+
+  // If turned OFF → clear all enclosure fields
+  if (!show) {
+    document.getElementById("EnclosureEquipmentType").value = "";
+
+    const eeiBlock = document.getElementById("EEI");
+    eeiBlock.innerHTML = ""; // remove all identifier rows
+  }
+
+}
+function toggleSVA() {
+  const show = document.getElementById("UseSVA").value === "yes";
+  const block = document.getElementById("SVA_Block");
+
+  block.style.display = show ? "block" : "none";
+
+  // If turned OFF → clear SVA fields
+  if (!show) {
+    document.getElementById("SignFileLocation").value = "";
+    document.getElementById("PublicKeyFileLocation").value = "";
+    document.getElementById("DigitalCertificate").value = "";
+  }
+}
+
+
+/* ---------- Required-field validation ---------- */
+function validateRequired() {
+  const g = (id) => document.getElementById(id);
+
+  if (!g("SchemaVersion").value.trim()) return false;
+  if (SchemaVersionErr.style.display === "block") return false;
+const signAlgo = document.getElementById("SignAlgorithm").value;
+const hashAlgo = document.getElementById("HashAlgorithm").value;
+const err = document.getElementById("SignMethodErr");
+
+err.style.display = "none";
+
+if (!signAlgo) {
+  err.textContent = "Sign Algorithm is required";
+  err.style.display = "block";
+  return false;
+}
+
+if (signAlgo !== "ED25519" && signAlgo !== "ED448") {
+  if (!hashAlgo) {
+    err.textContent = "Hash Algorithm is required for selected Sign Algorithm";
+    err.style.display = "block";
+    return false;
+  }
+}
+
+
+
+  if (!g("UpdateableComponentType").value) return false;
+  if (!g("Manufacturer").value) return false;
+  if (!g("EquipmentType").value) return false;
+
+  if (FilePathErr.style.display === "block") return false;
+  if (BaseLocationErr.style.display === "block") return false;
+
+  const esi = document.querySelectorAll("#ESI .array-item");
+  if (esi.length === 0) return false;
+  for (let r of esi) {
+    if (!r.querySelector(".idtype").value.trim()) return false;
+    if (!r.querySelector(".idvalue").value.trim()) return false;
+  }
+
+  if (!g("UpdateSoftwareVersion").value.trim()) return false;
+  if (UpdateSoftwareVersionErr.style.display === "block") return false;
+
+  const dig = document.querySelectorAll("#FileDigests .array-item");
+  if (dig.length === 0) return false;
+  for (let r of dig) {
+    if (!r.querySelector(".hashAlgo").value.trim()) return false;
+    if (!r.querySelector(".hashValue").value.trim()) return false;
+  }
+
+  const sva = g("UseSVA").value === "yes";
+
+/* ---------- Enclosure validation ---------- */
+const isEnclosure = g("PartOfEnclosure").value === "true";
+
+if (isEnclosure) {
+  // Enclosure Equipment Type required
+  if (!g("EnclosureEquipmentType").value.trim()) {
+    return false;
+  }
+
+  // At least one Enclosure Equipment Identifier required
+  const eei = document.querySelectorAll("#EEI .array-item");
+  if (eei.length === 0) {
+    return false;
+  }
+
+  // Each EEI must have IdType and IdValue
+  for (let r of eei) {
+    if (!r.querySelector(".idtype2").value.trim()) return false;
+    if (!r.querySelector(".idvalue2").value.trim()) return false;
+  }
+}
+
+
+  if (sva) {
+    if (!g("SignFileLocation").value.trim()) return false;
+    if (!g("PublicKeyFileLocation").value.trim()) return false;
+
+    if (SignFileLocationErr.style.display === "block") return false;
+    if (PublicKeyFileLocationErr.style.display === "block") return false;
+  }
+
+  // Payload required and not invalid
+  const payload = document.getElementById("PayloadUpload").files[0];
+  if (!payload) return false;
+  if (document.getElementById("PayloadErr").style.display === "block") return false;
+
+  // Required uploads
+if (!PayloadUpload.files.length) return false;
+if (!SignUpload.files.length) return false;
+if (!PublicKeyUpload.files.length) return false;
+
+if (PayloadErr.style.display === "block") return false;
+if (SignUploadErr.style.display === "block") return false;
+if (PublicKeyUploadErr.style.display === "block") return false;
+
+/* ---------- Minimum Installed Version validation ---------- */
+const minVer = g("MinimumInstalledVersion").value.trim();
+
+if (!minVer) return false;
+
+const isValidMinVer =
+  minVer === "Not Applicable" ||
+  /^\d+(\.\d+)+$/.test(minVer);
+
+if (!isValidMinVer) return false;
+
+// also block save if error message is visible
+if (MinimumInstalledVersionErr.style.display === "block") return false;
+
+
+
+  return true;
+}
+
+/* ---------- Save JSON + ZIP (using File object) ---------- */
+
+function setupUpload(inputId, nameId, errId, allowedRegex) {
+  const input = document.getElementById(inputId);
+  const name = document.getElementById(nameId);
+  const err = document.getElementById(errId);
+  const btn = input.previousElementSibling;
+
+  btn.onclick = () => input.click();
+
+  input.addEventListener("change", () => {
+    err.style.display = "none";
+    name.textContent = "No file selected";
+
+    if (!input.files.length) return;
+
+    const fileName = input.files[0].name;
+    if (!allowedRegex.test(fileName)) {
+      err.style.display = "block";
+      input.value = "";
+      return;
+    }
+
+    name.textContent = fileName;
+  });
+}
+
+// Payload
+setupUpload(
+  "PayloadUpload",
+  "PayloadFileName",
+  "PayloadErr",
+  /\.(tar|bin|fwpkg|cec|hex)$/i
+);
+
+// Sign
+setupUpload(
+  "SignUpload",
+  "SignFileName",
+  "SignUploadErr",
+  /\.(sig|sign)$/i
+);
+
+// Public Key
+setupUpload(
+  "PublicKeyUpload",
+  "PublicKeyFileName",
+  "PublicKeyUploadErr",
+  /\.(pub|pem|key)$/i
+);
+
+
+async function saveJSON() {
+  const simpleError = document.getElementById("simpleError");
+  const sigError = document.getElementById("sigError");
+  const hashError = document.getElementById("hashError");
+  simpleError.style.display= "none";
+  sigError.style.display= "none";
+  hashError.style.display = "none";
+  if (!validateRequired()) {
+    simpleError.style.display = "block";
+    simpleError.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+let verification;
+try {
+   verification = await    runVerification();
+} catch (e) {
+  sigError.textContent= "Signature verification failed."
+  sigError.style.display = "block";
+  return;
+}
+if (verification.errorType === "WRONG_PUBLIC_KEY"||verification.errorType === "UNSUPPORTED_KEY_TYPE") {
+  sigError.textContent = "Wrong public key file uploaded.";
+  sigError.style.display = "block";
+  if(!verification.integrityValid) hashError.style.display= "block";
+  return;
+}
+if (verification.errorType === "ALGO_MISMATCH") {
+  sigError.textContent =
+    "Correct sign verification method - " + verification.correctMethod;
+  sigError.style.display = "block";
+  if(!verification.integrityValid) hashError.style.display= "block";
+  return;
+}
+
+if(!(verification.signatureValid||verification.integrityValid)){
+  sigError.textContent= "Signature verification failed."
+sigError.style.display = "block";
+hashError.style.display = "block";
+return;
+}
+if (!verification.signatureValid) {
+  sigError.textContent= "Signature verification failed."
+  sigError.style.display = "block";
+  return;
+}
+
+if (!verification.integrityValid) {
+  hashError.style.display = "block";
+  return;
+}
+  const g = (id) => document.getElementById(id);
+
+  let signVerificationMethod;
+  if(g("HashAlgorithm").value==="") signVerificationMethod= g("SignAlgorithm").value;
+  else signVerificationMethod= g("SignAlgorithm").value+"-"+g("HashAlgorithm").value;
+
+
+  const obj = {
+    SchemaVersion: g("SchemaVersion").value.trim(),
+    UpdateableComponentType: g("UpdateableComponentType").value,
+    Manufacturer: g("Manufacturer").value,
+    EquipmentType: g("EquipmentType").value,
+    EquipmentSoftwareIdentifiers: Array.from(document.querySelectorAll("#ESI .array-item")).map((r) => ({
+      IdType: r.querySelector(".idtype").value,
+      IdValue: r.querySelector(".idvalue").value,
+    })),
+
+    UpdateableComponentName: g("UpdateableComponentName").value,
+    UpdateSoftwareVersion: g("UpdateSoftwareVersion").value.trim(),
+    UpdateSoftwareCriticality: g("UpdateSoftwareCriticality").value,
+
+    PartOfEnclosure: g("PartOfEnclosure").value === "true",
+
+    EnclosureDetails: {
+      EnclosureEquipmentType: g("EnclosureEquipmentType").value,
+      EnclosureEquipmentIdentifiers: Array.from(document.querySelectorAll("#EEI .array-item")).map((r) => ({
+        IdType: r.querySelector(".idtype2")?.value || "",
+        IdValue: r.querySelector(".idvalue2")?.value || "",
+      })),
+    },
+
+    PackageInfo: {
+      BaseLocation: g("BaseLocation").value,
+      FilePath: g("FilePath").value,
+      EmbeddedSignature: g("EmbeddedSignature").value === "true",
+      SignVerificationMethod: signVerificationMethod,
+      SignVerificationAttributes: {
+        SignFileLocation: g("SignFileLocation").value,
+        PublicKeyFileLocation: g("PublicKeyFileLocation").value,
+        DigitalCertificate: g("DigitalCertificate").value,
+      },
+      FileDigests: Array.from(document.querySelectorAll("#FileDigests .array-item")).map((r) => ({
+        HashAlgorithm: r.querySelector(".hashAlgo").value,
+        HashValue: r.querySelector(".hashValue").value,
+      })),
+    },
+
+    PackageDependency: {
+      MinimumInstalledVersion: g("MinimumInstalledVersion").value,
+    },
+
+    UpdateActivationRequirements: {
+      ControllerReboot: g("ControllerReboot").value === "true",
+      EnclosureReboot: g("EnclosureReboot").value === "true",
+    },
+
+
+  };
+
+
+  const zip = new JSZip();
+  const ndate= new Date("2000-01-01T00:00:00Z");
+ const metadataString = JSON.stringify(obj, null, 2);
+ 
+  zip.file("metadata.json", metadataString,{date:ndate});
+
+  const payload = document.getElementById("PayloadUpload").files[0];
+  if (payload) {
+    const prefixedName = "Payload_" + payload.name;
+    zip.file(prefixedName, payload, { binary: true,date:ndate});
+  }
+
+  const sign = document.getElementById("SignUpload").files[0];
+  if (sign) {
+    const prefixedName = "Signature_" + sign.name;
+    zip.file(prefixedName, sign, { binary: true,date:ndate});
+  }
+
+  const publicKey = document.getElementById("PublicKeyUpload").files[0];
+  if (publicKey) {
+    const prefixedName = "PublicKey_" + publicKey.name;
+    zip.file(prefixedName, publicKey, { binary: true,date:ndate});
+  }
+
+const zipData = await zip.generateAsync({ type: "uint8array",compression:"STORE" });
+const hash= await window.firmwareAPI.hashZip(zipData);
+const zipBlob = new Blob([zipData], { type: "application/zip" });
+
+
+// Download ZIP using hash-based filename
+const a = document.createElement("a");
+a.href = URL.createObjectURL(zipBlob);
+a.download = `Package_Bundle_${hash}.zip`;
+a.click();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "name": "firmware-tool",
+  "version": "1.0.0",
+  "main": "main.js",
+  "private": true,
+
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable"
+  },
+
+  "devDependencies": {
+    "electron": "28.2.0",
+    "electron-builder": "24.13.3"
+  },
+
+  "dependencies": {},
+
+  "build": {
+    "appId": "com.vendor.firmwaretool",
+    "productName": "FirmwareTool",
+
+    "asar": true,
+
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "app/**",
+      "package.json"
+    ],
+
+    "extraResources": [
+      {
+        "from": "openssl",
+        "to": "openssl"
+      },
+      {
+        "from": "licenses",
+        "to": "licenses"
+      }
+    ],
+
+    "electronLanguages": [
+      "en-US"
+    ],
+
+    "directories": {
+      "output": "dist"
+    },
+
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    }
+  }
+}
